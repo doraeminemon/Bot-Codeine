@@ -10,7 +10,8 @@ module.exports = function (msg) {
     let command = tokens.shift();
     if (command.charAt(0) === "!") {
       command = command.substring(1);
-      commands[command](msg, tokens);
+      if ( command in commands )
+        commands[command](msg, tokens);
     }
   }
 }
