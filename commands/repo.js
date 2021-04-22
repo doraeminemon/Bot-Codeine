@@ -1,63 +1,54 @@
-const Discord = require('discord.js')
+const Discord = require("discord.js")
 const client = new Discord.Client()
-const Sequelize = require('sequelize')
-const Sqlite3 = require('sqlite3')
 
-const sequelize = new Sequelize('sqlite::memory::')
+const connection = require('../database');
 
-const Tags = sequelize.define('tags', {
-	name: {
-		type: Sequelize.TEXT,
-		unique: true,
-	},
-	description: Sequelize.TEXT,
-	username: Sequelize.STRING,
-	usage_count: {
-		type: Sequelize.INTEGER,
-		defaultValue: 0,
-		allowNull: false,
-	},
-});
+module.exports = async function(msg) {
+    let textToArray = msg.content.split(" ")
+    let textMessage = textToArray.shift()
+    let referencedMessage = msg.reference
 
-client.once('ready', () => {
-	Tags.sync();
-});
+    let titleInput = textToArray.join(" ")
 
-module.exports = async function (msg) {
-  	let textToArray = msg.content.split(" ")
-  	let textMessage = textToArray.shift()
-  	let referencedMessage = msg.reference
-  	if ( !msg.reference )
-		return;
-	msg.channel.messages.fetch(referencedMessage.messageID).then( async message => {
-        const linkToPost = "https://discord.com/channels/" + referencedMessage.guildID + "/" + referencedMessage.channelID + "/" + referencedMessage.messageID
-        const textInPost = message.content
+    if (!msg.reference)
+        return;
 
-        const splitArgs = textInPost.split(' ');
-        const tagName = splitArgs.shift();
-        const tagDescription = splitArgs.join(' ');
+    msg.channel.messages.fetch(referencedMessage.messageID).then(async post => {
 
+        let postURL = "https://discord.com/channels/" + referencedMessage.guildID + "/" + referencedMessage.channelID + "/" + referencedMessage.messageID;
+        let textInPost = post.content;
+
+        const repoTitle = titleInput;
+        const repoContent = textInPost;
+        const repoAuthor = msg.author.tag;
+        const repoURL = postURL;
+        // const repoAttachments = post.attachments.url;
+        post.attachments.forEach(attachment => {
+            const repoAttachments = attachment.url;
+            console.log(repoAttachments)
+        }) // WORKED
+        // const repoAttachments = getAttachment.url; // NOT WORKING (undefined)
+        // console.log(post.attachments)
+        // console.log(repoAttachments)
+    
         try {
-            const tag = await Tags.create({
-                name: tagName,
-                description: tagDescription,
-                username: message.author.username,
+            const repo = await connection.model('repository').create({
+                title: repoTitle,
+                content: repoContent,
+                url: repoURL,
+                author: repoAuthor,
+                attachments: repoAttachments,
+                // tags: repoTags,
             });
-            return message.reply(`Tag ${tag.name} added.`);
+            return msg.reply(`Đã thêm *${repo.title}*.`);
         }
 
         catch (e) {
             if (e.name === 'SequelizeUniqueConstraintError') {
-                return message.reply('That tag already exists.');
+                return msg.reply('Trùng rồi bạn tôi ơi.');
             }
-            return message.reply('Something went wrong with adding a tag.');
+            return msg.reply('Lỗi rồi bạn tôi ơi.');
         }
 
-		msg.channel.send(linkToPost + ";" + textInPost);
-	} );
-  // msg.channel.send("**link**\n" + "https://discord.com/channels/" + referencedMessage.guildID + "/" + referencedMessage.channelID + "/" + referencedMessage.messageID);
-
-  // msg.channel.messages.fetch(referencedMessage.messageID)
-  // .then(message => msg.channel.send("**content**\n" + message.content))
-  // .catch(console.error);
+    })
 }
