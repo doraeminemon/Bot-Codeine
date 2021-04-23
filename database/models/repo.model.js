@@ -5,7 +5,11 @@ module.exports = (connection) => {
             title: {
                 type: DataTypes.STRING,
                 unique: true,
-                allowNull: false
+                allowNull: false,
+                primaryKey: true,
+                validation: {
+                    len: [10, 200],
+                }
             },
             content: DataTypes.TEXT,
             author: DataTypes.STRING,
@@ -14,17 +18,14 @@ module.exports = (connection) => {
                 unique: true,
             },
             attachments: {
-                type: DataTypes.TEXT,
-                allowNull: false
+                type: DataTypes.TEXT
             }, 
             links: {
                 type: DataTypes.TEXT
             },
-            // tags: Sequelize.ARRAY,
-            usage_count: {
-                type: DataTypes.INTEGER,
-                defaultValue: 0,
-            }
+            tags: DataTypes.TEXT
+        }, {
+            timestamps: false,
         }
     )
 }

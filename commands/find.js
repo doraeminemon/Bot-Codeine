@@ -13,7 +13,7 @@ module.exports = async function(msg) {
         console.log("Find tag: " + repoTitle)
         const repo = await connection.model('repository').findOne({ where: { title: repoTitle } });
         if (repo) {
-
+            console.log(repo.dataValues)
             return msg.channel.send("Tiêu đề: " + repo.get('title') + "\nTác giả:" + repo.get('author') + "\nNội dung:" + repo.get('content') + "\nURL tới post: " + repo.get('url') + "\n\nĐính kèm: " + repo.get('attachments') + "\nĐường dẫn trong post: " + repo.get('links'));
         }
         return msg.reply(`Could not find tag: ${repoTitle}`);

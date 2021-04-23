@@ -22,14 +22,20 @@ module.exports = async function(msg) {
         const repoContent = textInPost;
         const repoAuthor = msg.author.tag;
         const repoURL = postURL;
-        // const repoAttachments = post.attachments.url;
+
+        const attachmentArray = [];
+        
         post.attachments.forEach(attachment => {
-            const repoAttachments = attachment.url;
-            console.log(repoAttachments)
-        }) // WORKED
-        // const repoAttachments = getAttachment.url; // NOT WORKING (undefined)
-        // console.log(post.attachments)
-        // console.log(repoAttachments)
+            // const attachmentArray = [attachment.url];
+            attachmentArray.push(attachment.url)
+            // const joinAttachment = attachmentArray.join(", ");
+            // console.log('\n\n' + joinAttachment)
+        })
+
+        const repoAttachments = attachmentArray.join(', ');
+
+        console.log(repoAttachments);
+        console.log(typeof repoAttachments);
     
         try {
             const repo = await connection.model('repository').create({
@@ -37,7 +43,7 @@ module.exports = async function(msg) {
                 content: repoContent,
                 url: repoURL,
                 author: repoAuthor,
-                attachments: repoAttachments,
+                // attachments: repoAttachments,
                 // tags: repoTags,
             });
             return msg.reply(`Đã thêm *${repo.title}*.`);
