@@ -1,7 +1,7 @@
 const { DataTypes } = require('sequelize');
 
 module.exports = (connection) => {
-    connection.define('repository', {
+    connection.define('database', {
             title: {
                 type: DataTypes.STRING,
                 unique: true,
@@ -18,13 +18,11 @@ module.exports = (connection) => {
                 unique: true,
             },
             attachments: {
-                type: DataTypes.TEXT
-            }, 
-            links: {
-                type: DataTypes.TEXT
+                type: DataTypes.STRING(1000)
             },
             tags: DataTypes.TEXT
         }, {
+            tableName: 'Repository',
             timestamps: false,
         }
     )

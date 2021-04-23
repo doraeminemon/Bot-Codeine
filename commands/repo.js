@@ -34,12 +34,12 @@ module.exports = async function(msg) {
         console.log(repoAttachments);
     
         try {
-            const repo = await connection.model('repository').create({
+            const repo = await connection.model('database').create({
                 title: repoTitle,
                 content: repoContent,
                 url: repoURL,
                 author: repoAuthor,
-                // attachments: repoAttachments,
+                attachments: repoAttachments,
                 // tags: repoTags,
             });
             return msg.reply(`Đã thêm *${repo.title}*.`);

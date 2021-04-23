@@ -6,7 +6,7 @@ const connection = new Sequelize('database', 'root', 'root', {
     host: 'localhost',
     dialect: 'sqlite',
     logging: console.log,
-    storage: 'database/repository.sqlite',
+    storage: 'database/repo.database',
 })
 
 db.connection = connection;

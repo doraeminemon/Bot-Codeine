@@ -11,10 +11,10 @@ module.exports = async function(msg) {
     console.log(textMessage)
         const repoTitle = find_title;
         console.log("Find tag: " + repoTitle)
-        const repo = await connection.model('repository').findOne({ where: { title: repoTitle } });
+        const repo = await connection.model('database').findOne({ where: { title: repoTitle } });
         if (repo) {
             console.log(repo.dataValues)
-            return msg.channel.send("Tiêu đề: " + repo.get('title') + "\nTác giả:" + repo.get('author') + "\nNội dung:" + repo.get('content') + "\nURL tới post: " + repo.get('url') + "\n\nĐính kèm: " + repo.get('attachments') + "\nĐường dẫn trong post: " + repo.get('links'));
+            return msg.channel.send("Tiêu đề: " + repo.get('title') + "\n Tác giả: " + repo.get('author') + "\nNội dung: " + repo.get('content') + "\nURL tới post: " + repo.get('url') + "\nĐính kèm: " + repo.get('attachments') + "\nĐường dẫn trong post: " + repo.get('links'));
         }
-        return msg.reply(`Could not find tag: ${repoTitle}`);
+        return msg.reply(`Làm đéo có ${repoTitle}?`);
 }

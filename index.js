@@ -19,7 +19,7 @@ async function assertDatabaseConnectionOk() {
 }
 
 connection.sync({
-    // force: true,
+    // alter: true,
     // logging: console.log
 })
 .then(function () {
@@ -34,7 +34,7 @@ connection.sync({
 //         tags: '',
 //     }).save()
 
-    connection.model('repository').findOne({
+    connection.model('database').findOne({
         where: { title: '' }
     }).then(function(test) {
         console.log("\n" + test.content)
