@@ -26,16 +26,12 @@ module.exports = async function(msg) {
         const attachmentArray = [];
         
         post.attachments.forEach(attachment => {
-            // const attachmentArray = [attachment.url];
             attachmentArray.push(attachment.url)
-            // const joinAttachment = attachmentArray.join(", ");
-            // console.log('\n\n' + joinAttachment)
         })
 
         const repoAttachments = attachmentArray.join(', ');
 
         console.log(repoAttachments);
-        console.log(typeof repoAttachments);
     
         try {
             const repo = await connection.model('repository').create({
