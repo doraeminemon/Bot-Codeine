@@ -18,12 +18,21 @@ module.exports = (connection) => {
                 unique: true,
             },
             attachments: {
-                type: DataTypes.STRING(1000)
+                type: DataTypes.TEXT
             },
             tags: DataTypes.TEXT
         }, {
-            tableName: 'Repository',
+            tableName: 'repository',
             timestamps: false,
         }
     )
+
+    connection.define('tag', {
+        tagName: {
+            type: DataTypes.STRING,
+            unique: true,
+            allowNull: false,
+            primaryKey: true
+        }
+    })
 }

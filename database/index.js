@@ -6,7 +6,7 @@ const connection = new Sequelize('database', 'root', 'root', {
     host: 'localhost',
     dialect: 'sqlite',
     logging: console.log,
-    storage: 'database/repo.database',
+    storage: 'database/repository.db',
 })
 
 db.connection = connection;
@@ -27,7 +27,7 @@ db.checkConnection();
 
 const modelDefiners = [
     require('./models/repo.model')
-]
+];
 
 for (const modelDefiner of modelDefiners) {
 	modelDefiner(connection);

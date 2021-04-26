@@ -19,25 +19,24 @@ async function assertDatabaseConnectionOk() {
 }
 
 connection.sync({
-    // alter: true,
+    // force: true,
     // logging: console.log
 })
-.then(function () {
+.then( () => {
 
-//     connection.model('repository').build( {
-//         title: '',
-//         content: '',
-//         author: '',
-//         url: '',
-//         attachments: '',
-//         links: '',
-//         tags: '',
-//     }).save()
+    // connection.model('database').build( {
+    //     title: 'Test Title',
+    //     content: 'Test Content',
+    //     author: 'Test Author',
+    //     url: 'http://test.com/',
+    //     attachments: 'Test Attachments',
+    //     tags: 'Không có',
+    // }).save()
 
     connection.model('database').findOne({
-        where: { title: '' }
-    }).then(function(test) {
-        console.log("\n" + test.content)
+        where: { title: 'Test Title' }
+    }).then(test => {
+        console.log("\nTags: " + test.tags)
     }).catch(error => console.log(error)) 
 
 
@@ -47,11 +46,15 @@ connection.sync({
 
 client.on("ready", () => {
     console.log(`\nLogged in as ${client.user.tag}. \n`)
-    client.user.setActivity ('Sẽ mãi mãi yêu em là thế', {type: "LISTENING"})
+    client.user.setActivity('Nhấn !alo để thưa ngài.', {type: "WATCHING"})
+
+
+        // client.channels.cache.get('546206789503549461').send('Hãy trả lại công bằng cho @Dank Memer!')
+
 })
 
 const commandHandler = require("./commands")
 client.on("message", commandHandler)
 
 // keepAlive()
-client.login(mySecret) 
+client.login(mySecret)
