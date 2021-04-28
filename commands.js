@@ -12,7 +12,7 @@ const createtag = require("./commands/createtag.js")
 const commands = { alo, repo, find, tags, createtag }
 
 module.exports = function (msg) {
-  if (msg.channel.id == "832437445169643520" || "832561266308546592") {
+  if (msg.channel.id == "832244041810575371" || "832437445169643520" || "832561266308546592") {
     let tokens = msg.content.split (" ");
     let command = tokens.shift();
     let commandArg = tokens.join(" ")

@@ -14,7 +14,7 @@ module.exports = async function(msg) {
         let tagIndex = 0
         const getTagList = await connection.model('tag').findAll({ attributes: ['tagName'] });
         const tagListToArray = getTagList.map(t => `\`${++tagIndex}\` **${t.tagName}**`) || 'Đéo thấy cái tag nào luôn ạ.';
-        const tagListToString = tagListToArray.join(' | ') || 'Đéo thấy cái tag nào luôn ạ.';
+        const tagListToString = tagListToArray.join('\n') || 'Đéo thấy cái tag nào luôn ạ.';
 
         const iterator = tagListToArray.keys()
         const tagIndexing = []
@@ -22,10 +22,41 @@ module.exports = async function(msg) {
         for (const key of iterator) {
             tagIndexing.push(key)
         } return (
-            msg.reply(`\n👍 Đã thêm \`title\`:\n\> **${repoTitle}**\n\n👉 Nhập một hoặc nhiều số ứng với thẻ muốn gắn:\n${tagListToString}`)
+            console.log(tagIndexing),
+            msg.channel.send(`Đã thêm **${repoTitle}** vào repo. Gắn tag cho bài này: \n${tagListToString}`),
+            inputTag(msg, tagIndexing, getTagList)
         )
-            
+    }
 
+    function inputTag(msg, tagIndexing, getTagList) {
+
+        function onlyNumbers(element, validationArray) {
+            return validationArray.includes(element-1)
+        }
+
+        const filter = m => m.content.split(' ').map(Number).every(e => onlyNumbers(e, tagIndexing))
+
+        const collector = msg.channel.createMessageCollector(filter, { max: 1, time: 5000 });
+
+        collector.on('collect', m => {
+            console.log(`Collected ${m.content}`)
+            collector.stop()
+        });
+
+        collector.on('end', collected => {
+            if (collected.size === 0) {
+                msg.channel.send('Ơ, địt mẹ không gắn tag à')
+            } else {
+                const processedInput = [...new Set(collected.first().content.split(' ').map(Number))].sort((a, b) => a - b)
+
+                const getTagName = []
+                processedInput.forEach(e => {
+                    getTagName.push(getTagList[e-1].tagName)
+                })
+
+                msg.channel.send(getTagName.join(', '));
+            }
+        });
     }
 
     msg.channel.messages.fetch(referencedMessage.messageID).then(async post => {
@@ -63,7 +94,5 @@ module.exports = async function(msg) {
             } else {
                 msg.reply(`Có cái này mất rồi.`)
             }
-
-
     })
 }
