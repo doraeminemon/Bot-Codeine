@@ -24,38 +24,49 @@ module.exports = async function(msg) {
         } return (
             console.log(tagIndexing),
             msg.channel.send(`Đã thêm **${repoTitle}** vào repo. Gắn tag cho bài này: \n${tagListToString}`),
-            inputTag(msg, tagIndexing, getTagList)
+            inputTag(msg, tagIndexing, getTagList, repoTitle)
         )
     }
 
-    function inputTag(msg, tagIndexing, getTagList) {
+    function inputTag(msg, tagIndexing, getTagList, repoTitle) {
 
         function onlyNumbers(element, validationArray) {
             return validationArray.includes(element-1)
         }
-        const filter = m => m.content.split(/[^\d]+/).map(Number).every(e => onlyNumbers(e, tagIndexing))
+        const filter = (collectMessage, collectReaction) => {
+            return collectMessage.content.split(/[^\d]+/).map(Number).every(e => onlyNumbers(e, tagIndexing)) && collectMessage.author.id === msg.author.id;
+        }
         const collector = msg.channel.createMessageCollector(filter, { time: 60000 });
-        collector.on('collect', m => {
-            console.log(`Collected ${m}`)
-            if (m.size !== 0) {
+        collector.on('collect', collectingMessages => {
+            console.log(`Collected ${collectingMessages}`)
+            if (collectingMessages.size !== 0) {
                 collector.stop()
             }
         });
-        collector.on('end', collected => {
-            if (collected.size === 0) {
+        collector.on('end', async collectedMessages => {
+            if (collectedMessages.size === 0) {
                 msg.channel.send('Ơ, địt mẹ không gắn tag à')
             } else {
-                const processedInput = [...new Set(collected.first().content.split(/[^\d]+/).map(Number))].sort((a, b) => a - b)
+                const processedInput = [...new Set(collectedMessages.first().content.split(/[^\d]+/).map(Number))].sort((a, b) => a - b)
 
                 const getTagName = []
                 try {
                     processedInput.forEach(e => {
                         getTagName.push(getTagList[e-1].tagName)
                     })
-                    msg.channel.send(getTagName.join(', '));
-                    return
+                    const tagsToText = getTagName.join(', ')
+
+                    msg.channel.send(tagsToText);
+
+
+                    const addTagToPost = await connection.model('database').update({ tags: tagsToText }, { where: { title: repoTitle } });
+
+                    if (addTagToPost > 0) {
+                        return msg.reply(`Đã thêm tag: ${tagsToText}.`);
+                    }
+                    return msg.channel.send(`Could not find a tag with name ${tagName}.`);
                 } catch (error) {
-                    msg.channel.send('loi roi')
+                    msg.channel.send('Xảy ra lỗi, không thêm được tag cho post rồi bạn ơi.')
                     console.log(error)
                 }
             }
@@ -67,7 +78,7 @@ module.exports = async function(msg) {
         let textInPost = post.content
         const repoTitle = titleInput.trim()
         const repoContent = textInPost
-        const repoAuthor = msg.author.tag
+        const repoAuthor = post.author.tag
         const repoURL = postURL
         const attachmentArray = []
         post.attachments.forEach(attachment => attachmentArray.push(attachment.url))
@@ -82,6 +93,7 @@ module.exports = async function(msg) {
                     url: repoURL,
                     author: repoAuthor,
                     attachments: repoAttachments,
+                    tags: '',
                 }
             });
             if (created) {

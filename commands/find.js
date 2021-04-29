@@ -14,7 +14,7 @@ module.exports = async function(msg) {
     if (repo) {
         console.log(repo.dataValues)
         
-        return msg.channel.send("Tiêu đề: " + repo.get('title') + "\n Tác giả: " + repo.get('author') + "\nNội dung: " + repo.get('content') + "\nURL tới post: " + repo.get('url') + "\nĐính kèm: " + repo.get('attachments') + "\nĐường dẫn trong post: " + repo.get('links'));
+        return msg.channel.send("Tiêu đề: " + repo.get('title') + "\nTác giả: " + repo.get('author') + "\nNội dung: " + repo.get('content') + "\nURL tới post: " + repo.get('url') + "\nĐính kèm: " + repo.get('attachments') + "\nThẻ đã gắn: " + repo.get('tags'));
     }
     return msg.reply(`Làm đéo có ${repoTitle}?`);
 }

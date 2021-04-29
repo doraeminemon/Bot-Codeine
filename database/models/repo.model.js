@@ -20,7 +20,7 @@ module.exports = (connection) => {
             attachments: {
                 type: DataTypes.TEXT
             },
-            tags: DataTypes.TEXT
+            tags: DataTypes.STRING
         }, {
             tableName: 'repository',
             timestamps: false,

@@ -42,7 +42,7 @@ connection.sync({
 
 }).catch(error => console.log(error))
 
-// client.on('debug', console.log);
+client.on('debug', console.log);
 
 client.on("ready", () => {
     console.log(`\nLogged in as ${client.user.tag}. \n`)
