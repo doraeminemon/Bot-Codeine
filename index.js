@@ -37,19 +37,15 @@ connection.sync({
         where: { title: 'Test Title' }
     }).then(test => {
         console.log("\nTags: " + test.tags)
-    }).catch(error => console.log(error)) 
-
+    }).catch(error => console.log(error))
 
 }).catch(error => console.log(error))
 
-client.on('debug', console.log);
-
 client.on("ready", () => {
     console.log(`\nLogged in as ${client.user.tag}. \n`)
-    client.user.setActivity('Nhấn !alo để thưa ngài.', {type: "WATCHING"})
+    client.user.setActivity('🙏 !alo để thưa ngài', {type: "WATCHING"})
 
-
-        // client.channels.cache.get('546206789503549461').send('Hãy trả lại công bằng cho @Dank Memer!')
+        // client.channels.cache.get('827113933881081866').send('Già rồi còn non')
 
 })
 
