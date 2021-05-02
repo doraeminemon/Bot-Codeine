@@ -23,7 +23,7 @@ module.exports = (connection) => {
             tags: DataTypes.STRING
         }, {
             tableName: 'repository',
-            timestamps: false,
+            timestamps: false
         }
     )
 

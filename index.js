@@ -1,13 +1,13 @@
-const Discord = require("discord.js")
+const Discord = require('discord.js')
 const client = new Discord.Client()
 const mySecret = process.env['TOKEN']
-const SQLite3 = require("sqlite3")
-const Sequelize = require("sequelize")
+const SQLite3 = require('sqlite3')
+const Sequelize = require('sequelize')
 
 const connection = require('./database');
 
 async function assertDatabaseConnectionOk() {
-	console.log(`Checking database connection...`);
+	console.log('Checking database connection…');
 	try {
 		await connection.authenticate();
 		console.log('Database connection OK!');
@@ -21,9 +21,7 @@ async function assertDatabaseConnectionOk() {
 connection.sync({
     // force: true,
     // logging: console.log
-})
-.then( () => {
-
+}).then( () => {
     // connection.model('database').build( {
     //     title: 'Test Title',
     //     content: 'Test Content',
@@ -32,25 +30,21 @@ connection.sync({
     //     attachments: 'Test Attachments',
     //     tags: 'Không có',
     // }).save()
-
     connection.model('database').findOne({
         where: { title: 'Test Title' }
     }).then(test => {
-        console.log("\nTags: " + test.tags)
+        console.log('Tags: ' + test.tags)
     }).catch(error => console.log(error))
-
 }).catch(error => console.log(error))
 
-client.on("ready", () => {
-    console.log(`\nLogged in as ${client.user.tag}. \n`)
-    client.user.setActivity('🙏 !alo để thưa ngài', {type: "WATCHING"})
-
-        // client.channels.cache.get('827113933881081866').send('Già rồi còn non')
-
+client.on('ready', () => {
+    console.log(`Logged in as ${client.user.tag}.`)
+    client.user.setActivity('Netflix', {type: 'WATCHING'})
+    // client.channels.cache.get('827113933881081866').send('Già rồi còn non')
 })
 
-const commandHandler = require("./commands")
-client.on("message", commandHandler)
+const commandHandler = require('./commands')
+client.on('message', commandHandler)
 
 // keepAlive()
 client.login(mySecret)

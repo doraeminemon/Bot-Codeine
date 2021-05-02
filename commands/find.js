@@ -1,20 +1,15 @@
-const SQLite3 = require("sqlite3")
-const Sequelize = require("sequelize")
-
 const connection = require('../database');
 
-module.exports = async function(msg) {
-    let textToArray = msg.content.split(" ")
-    let textMessage = textToArray.shift();
-    let find_title = textToArray.join(" ");
-
-    const repoTitle = find_title;
-    console.log("Find tag: " + repoTitle)
-    const repo = await connection.model('database').findOne({ where: { title: repoTitle } });
-    if (repo) {
-        console.log(repo.dataValues)
-        
-        return msg.channel.send("Tiêu đề: " + repo.get('title') + "\nTác giả: " + repo.get('author') + "\nNội dung: " + repo.get('content') + "\nURL tới post: " + repo.get('url') + "\nĐính kèm: " + repo.get('attachments') + "\nThẻ đã gắn: " + repo.get('tags'));
-    }
-    return msg.reply(`Làm đéo có ${repoTitle}?`);
+module.exports = async function(message, argument) {
+    let findRepoTitle = argument.join(' ')
+    const repo = await connection.model('database').findOne({ where: { title: findRepoTitle } })
+    if (repo) return message.channel.send(
+`Tiêu đề: ${repo.get('title')}
+Tác giả: ${repo.get('author')}
+Nội dung:
+${repo.get('content')}
+URL tới post: ${repo.get('url')}
+Đính kèm: ${repo.get('attachments') || 'Chưa có đính kèm.'}
+Thẻ đã gắn: ${repo.get('tags') || 'Chưa được gắn tag.'}`)
+    return message.reply(`Làm đéo có ${findRepoTitle}?`)
 }

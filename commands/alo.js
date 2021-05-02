@@ -1,6 +1,6 @@
-module.exports = function (msg) {
-  let textToArray = msg.content.split(" ");
+module.exports = function (message, argument) {
+  let textToArray = message.content.split(' ');
   let textMessage = textToArray.shift();
 
-  msg.channel.send("Gọi cái loz, đang ngủ")
+  message.channel.send('Gọi cái loz, đang ngủ')
 }

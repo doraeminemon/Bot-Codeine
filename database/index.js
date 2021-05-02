@@ -1,11 +1,10 @@
 const { Sequelize } = require('sequelize');
-
 const db = {};
 
-const connection = new Sequelize('database', 'root', 'root', {
+const connection = new Sequelize('database', 'root', 'password', {
     host: 'localhost',
     dialect: 'sqlite',
-    logging: console.log,
+    // logging: console.log,
     storage: 'database/repository.db',
 })
 
@@ -13,14 +12,9 @@ db.connection = connection;
 db.Sequelize = Sequelize;
 
 db.checkConnection = async function() {
-    connection
-        .authenticate()
-        .then( () => {
-            console.info("Đã kết nối với Database.")
-        })
-        .catch( (error) => {
-            console.error("Ôi địt cụ lỗi rồi:", error)
-        })
+    connection.authenticate()
+    .then(() => {console.info("Đã kết nối với Database.")})
+    .catch((error) => {console.error("Lỗi không kết nối được với database:", error)})
 }
 
 db.checkConnection();
