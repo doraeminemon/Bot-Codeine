@@ -4,8 +4,8 @@ const db = {};
 const connection = new Sequelize('database', 'root', 'password', {
     host: 'localhost',
     dialect: 'sqlite',
-    // logging: console.log,
-    storage: 'database/repository.db',
+    logging: false,
+    storage: 'database/repository.sqlite',
 })
 
 db.connection = connection;
@@ -20,7 +20,8 @@ db.checkConnection = async function() {
 db.checkConnection();
 
 const modelDefiners = [
-    require('./models/repo.model')
+    require('./models/repo.model'),
+    require('./models/tags.model')
 ];
 
 for (const modelDefiner of modelDefiners) {

@@ -16,7 +16,7 @@ module.exports = async function(message, argument) {
     }
     if (argument[0] === '-') {
         argument.shift()
-        if (argument.length === 0) return message.channel.send('Không được để trống tên tag.')
+        if (argument.length === 0) return message.channel.send('Nhập tên tag muốn xóa.')
         const removeTag = argument.join(' ')
         try {
             const tag = await connection.model('tag').destroy({ where: { tagName: removeTag } })
@@ -49,32 +49,35 @@ module.exports = async function(message, argument) {
         try {
             const tag = await connection.model('tag').update({ tagName: updateTagName }, { where: { tagName: findTagName } })
             if (tag > 0) return message.reply(`Đã đổi tên tag ~~${findTagName}~~ thành **${updateTagName}**.`)
-            return message.reply(`Không tìm thấy tag: ${findTagName}.`)
-        }
-        catch (error) {
-            if (error.name === 'SequelizeUniqueConstraintError') message.reply(`Tag ${updateTagName} có rồi.`)
-        }
-    }
+            return mess
 
-    if (argument[0] === 'a' ) {
-        argument.shift()
-        try {
-            const getTaggedRepo = await connection.model('database').findAll(
-                {attributes: {tags: {[Op.not]: null}}}
-            )
-            const taggedRepoToArray = getTaggedRepo.map(t => t.title)
-            console.log(taggedRepoToArray)
-            console.log(taggedRepoToArray.length)
-
-            Promise.all(taggedRepoToArray).then((element) => {
-                const updateTagNameInRepo = connection.model('database').update({ tags: 'NONONONO' }, { where: { title: element } })
-                
-                if (updateTagNameInRepo > 0) return message.reply(`Đã đổi tên tag ~~${element}~~ thành **${updateTagName}**.`)
-                return message.reply(`Không được.`)
-            })
         } catch (error) {
-                message.channel.send(error)
+            if (error.name === 'SequelizeUniqueConstraintError') message.reply(`Tag ${updateTagName} có rồi.`)
+        } finally {
+            try {
+                const repo = await connection.model('database').findAll( {attributes: {tags: {[Op.not]: null}}} )
+                const titlesOfTaggedItem = repo.map(item => item.title)
+                console.log(titlesOfTaggedItem)
+                Promise.all(titlesOfTaggedItem).then( () => {
+                    console.log(titlesOfTaggedItem)
+                    titlesOfTaggedItem.forEach(async itemTitle => {
+                        const getTitle = await connection.model('database').findOne({ where: { title: itemTitle } })
+                        if (getTitle) {
+                            let replaceTagName = getTitle.get('tags').replace(findTagName, updateTagName)
+                            try {
+                                connection.model('database').update({ tags: replaceTagName }, { where: { title: itemTitle } })
+                            } catch (error) {
+                                console.log(error)
+                            }
+                        }
+                    })
+                    return message.channel.send('OK ông ơi')
+                })
+            } catch (error) {
+                console.log(error)
+            }
         }
     }
+
 
 }

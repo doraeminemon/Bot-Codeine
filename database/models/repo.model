@@ -13,6 +13,7 @@ module.exports = (connection) => {
             },
             content: DataTypes.TEXT,
             author: DataTypes.STRING,
+            authorAvatarURL: DataTypes.STRING,
             url: {
                 type: DataTypes.STRING,
                 unique: true,
@@ -26,13 +27,4 @@ module.exports = (connection) => {
             timestamps: false
         }
     )
-
-    connection.define('tag', {
-        tagName: {
-            type: DataTypes.STRING,
-            unique: true,
-            allowNull: false,
-            primaryKey: true
-        }
-    })
 }
