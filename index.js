@@ -1,26 +1,23 @@
+const fs = require('fs')
 const Discord = require('discord.js')
-const client = new Discord.Client()
 const guildId = '708367190780543048'
-const mySecret = process.env['TOKEN']
+const DiscordContext = require('./lib/context')
+const SanChoiDiscordClient = require('./lib/client')
 
-const connection = require('./database')
+const client = new SanChoiDiscordClient()
+// discord collection is just another extended class of JS Map
 
-connection.sync({
-    alter: true,
-    // logging: console.log
-}).then(() => {
-    // connection.model('database').build( {
-    //     title: 'Test Title',
-    //     content: 'Test Content',
-    //     author: 'Test Author',
-    //     url: 'http://test.com/',
-    //     attachments: 'Test Attachments',
-    //     tags: 'Không có',
-    // }).save()
-    // connection.model('database').findOne({
-    //     where: { title: 'Test Title' }
-    // })
-}).catch(error => console.log(error))
+// loading all commands and set to the propperty
+fs.readdirSync('./commands')
+    .filter(file => file.endsWith('.js'))
+    .forEach(file => {
+        const command = require(`./commands/${file}`)
+        client.commands.set(command.name, command)
+    })
+
+const config = {
+    prefix: '/',
+}
 
 const getApp = (currentGuildId) => {
     const app = client.api.applications(client.user.id)
@@ -42,13 +39,14 @@ const createAPIMessage = async (interaction, content) => {
 }
 
 const reply = async (interaction, response) => {
-    let data = {
-        content: response,
-    }
-    // Check for embed
+    let data
     if (typeof response === 'object') {
         data = await createAPIMessage(interaction, response)
     }
+    else {
+        data = { content: response }
+    }
+    // Check for embed
     client.api.interactions(interaction.id, interaction.token).callback.post({
         data: {
             type: 4,
@@ -132,8 +130,24 @@ client.on('ready', async () => {
     client.user.setActivity('Netflix', { type: 'WATCHING' })
 })
 
-const commandHandler = require('./commands')
-client.on('message', commandHandler)
 
-// keepAlive()
-client.login(mySecret)
+client.on('message', async (message) => {
+    // command catcher
+    if (!message.content.startsWith(config.prefix) || message.author.bot) return
+
+    const args = message.content.slice(config.prefix.length).trim().split(/ +/)
+    const command = args.shift().toLowerCase()
+
+    if (!client.commands.has(command)) return
+
+    try {
+        const context = new DiscordContext(client, message, args)
+        client.commands.get(command).execute(context)
+    }
+    catch (error) {
+        console.error(error)
+        message.reply('Error executing command beep boop')
+    }
+})
+
+client.login(process.env.DISCORD_BOT_TOKEN)
