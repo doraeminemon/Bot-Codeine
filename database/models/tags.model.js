@@ -1,4 +1,4 @@
-const { DataTypes } = require('sequelize');
+const { DataTypes } = require('sequelize')
 
 module.exports = (connection) => {
     connection.define('tag', {
@@ -6,7 +6,7 @@ module.exports = (connection) => {
             type: DataTypes.STRING,
             unique: true,
             allowNull: false,
-            primaryKey: true
-        }
+            primaryKey: true,
+        },
     })
 }

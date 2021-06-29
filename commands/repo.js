@@ -20,15 +20,15 @@ module.exports = async function(message, argument) {
     const repoAuthorAvatarURL = post.author.displayAvatarURL()
     const repoURL = postURL
 
-    let attachmentArray = []
+    const attachmentArray = []
     post.attachments.forEach(attachment => attachmentArray.push(attachment.url))
 
     const repoAttachments = attachmentArray.join(', ')
-    
+
     // Initailize CREATE_REPO
     connection.model('database').findOrCreate({
         where: {
-            [Op.or]: [{title: repoTitle}, {url: repoURL}]
+            [Op.or]: [{ title: repoTitle }, { url: repoURL }],
         },
         defaults: {
             title: repoTitle,
@@ -38,7 +38,7 @@ module.exports = async function(message, argument) {
             authorAvatarURL: repoAuthorAvatarURL,
             attachments: repoAttachments,
             tags: '',
-        }
+        },
     }).then(created => {
         replyMessage(created)
     }).catch(error => {
@@ -51,17 +51,18 @@ module.exports = async function(message, argument) {
         const createRepo = created[1]
 
         if (createRepo) {
-            
-                console.log(message.author.id)
-                const tagHandler = await getTag()
-                tagCollector(tagHandler)
 
-        } else if (!createRepo) {
+            console.log(message.author.id)
+            const tagHandler = await getTag()
+            tagCollector(tagHandler)
+
+        }
+        else if (!createRepo) {
             return message.channel.send(`Tiêu đề ${existedRepo.title} đã có trong Repo. \`@find ${existedRepo.title}\``)
         }
     }
 
-    // Tagging – Get Tag List and set key -> value, then UPDATE tags to CREATED_REPO
+    // Tagging –Get Tag List and set key -> value, then UPDATE tags to CREATED_REPO
     const getTag = async () => {
         const emojis = ['🔴', '🟠', '🟡', '🟢', '🔵', '🟣', '🟤', '⚫', '⚪']
         const tag = await connection.model('tag').findAll({ attributes: ['tagName'] })
@@ -80,7 +81,7 @@ module.exports = async function(message, argument) {
         return {
             tagListing,
             tagKeys,
-            tag_map
+            tag_map,
         }
     }
 
@@ -89,52 +90,53 @@ module.exports = async function(message, argument) {
         // Call getTag function
 
         message.channel.send(`Đã thêm thành công. React để gắn thẻ!
-\> \_${repoTitle || 'Không lấy được tiêu đề'}\_
+> _${repoTitle || 'Không lấy được tiêu đề'}_
 ${tagHandling.tagListing.join(' ')}`)
-        
-        .then(collectReaction => {
-            const filter = (reaction, user) => {
-                return user.id === message.author.id
-            }
-            const makeButtons = []
-            for (const key of tagHandling.tagKeys) {
-                makeButtons.push(collectReaction.react(key))
-            }
 
-            // Message Reaction Collector
-            Promise.race(makeButtons).then( () => {
-                const collector = collectReaction.createReactionCollector(filter, {time: 600000})
-            
-                collector.on('collect', collected => {
-                    collectReaction.react('🆗').then( () => {
-                        collectReaction.react('❌')
-                    }).catch(error => console.log(error))
-                    if (collected.emoji.name === '🆗' || collected.emoji.name === '❌') {
-                        collector.stop()
-                    }
-                })
+            .then(collectReaction => {
+                const filter = (reaction, user) => {
+                    return user.id === message.author.id
+                }
+                const makeButtons = []
+                for (const key of tagHandling.tagKeys) {
+                    makeButtons.push(collectReaction.react(key))
+                }
 
-                collector.on('end', collected => {
-                    collectReaction.delete()
-                    const tagCollected = collected.map(item => item._emoji.name)
+                // Message Reaction Collector
+                Promise.race(makeButtons).then(() => {
+                    const collector = collectReaction.createReactionCollector(filter, { time: 600000 })
 
-                    if (tagCollected.includes('🆗')) {
-                        const index = tagCollected.indexOf('🆗')
-                        const processedInput = []
-                        if (index > -1) {
-                            tagCollected.splice(index, 1)
+                    collector.on('collect', collected => {
+                        collectReaction.react('🆗').then(() => {
+                            collectReaction.react('❌')
+                        }).catch(error => console.log(error))
+                        if (collected.emoji.name === '🆗' || collected.emoji.name === '❌') {
+                            collector.stop()
                         }
-                        for (const key of tagCollected) {
-                            processedInput.push(tagHandling.tag_map.get(key))
-                        }
-                        updateTag(processedInput.join(', '))
+                    })
 
-                    } else if (tagCollected.includes('❌')) { 
-                        findTitle(repoTitle)
-                    }
+                    collector.on('end', collected => {
+                        collectReaction.delete()
+                        const tagCollected = collected.map(item => item._emoji.name)
+
+                        if (tagCollected.includes('🆗')) {
+                            const index = tagCollected.indexOf('🆗')
+                            const processedInput = []
+                            if (index > -1) {
+                                tagCollected.splice(index, 1)
+                            }
+                            for (const key of tagCollected) {
+                                processedInput.push(tagHandling.tag_map.get(key))
+                            }
+                            updateTag(processedInput.join(', '))
+
+                        }
+                        else if (tagCollected.includes('❌')) {
+                            findTitle(repoTitle)
+                        }
+                    })
                 })
-            })
-        }).catch(error => {console.log(error)})
+            }).catch(error => {console.log(error)})
     }
 
     const updateTag = async (tagInput) => {
@@ -148,29 +150,22 @@ ${tagHandling.tagListing.join(' ')}`)
     const findTitle = (query) => {
         connection.model('database').findOne({ where: { title: query } }).then(found => {
 
-            let successMessage = new Discord.MessageEmbed()
+            const successMessage = new Discord.MessageEmbed()
             successMessage
-                    .setTitle(found.title)
-                    .setDescription(found.content)
-                    .setURL(found.url)
-                    .setAuthor(found.author, found.authorAvatarURL)
-                    .setThumbnail('https://media3.giphy.com/media/3o7abB06u9bNzA8lu8/giphy.gif?cid=ecf05e47302639138287f826ac42639cf299da19d497d171&rid=giphy.gif&ct=g')
-                    .addField('Thẻ', !found.tags ? `Chưa gắn tag` : found.tags, true)
-                    .addField('URL', found.url)
-                    .setImage(!found.attachments ? null : found.attachments)
-                    .setTimestamp()
-                    .setFooter(`${message.guild.name}`, message.guild.iconURL())
+                .setTitle(found.title)
+                .setDescription(found.content)
+                .setURL(found.url)
+                .setAuthor(found.author, found.authorAvatarURL)
+                .setThumbnail('https://media3.giphy.com/media/3o7abB06u9bNzA8lu8/giphy.gif?cid=ecf05e47302639138287f826ac42639cf299da19d497d171&rid=giphy.gif&ct=g')
+                .addField('Thẻ', !found.tags ? 'Chưa gắn tag' : found.tags, true)
+                .addField('URL', found.url)
+                .setImage(!found.attachments ? null : found.attachments)
+                .setTimestamp()
+                .setFooter(`${message.guild.name}`, message.guild.iconURL())
             message.channel.send(successMessage)
         })
     }
 
-    
-
-
-
-    
-
-    
 
     // message.channel.messages.fetch(referencedMessage.messageID).then(async post => {
     //     const postURL = `https://discord.com/channels/${referencedMessage.guildID}/${referencedMessage.channelID}/${referencedMessage.messageID}`
@@ -180,7 +175,7 @@ ${tagHandling.tagListing.join(' ')}`)
     //     const repoAuthor = post.author.tag
     //     const repoURL = postURL
     //     const attachmentArray = []
-        // post.attachments.forEach(attachment => attachmentArray.push(attachment.url))
+    // post.attachments.forEach(attachment => attachmentArray.push(attachment.url))
     //     const repoAttachments = attachmentArray.join(', ')
     //     const created = await connection.model('database').findOrCreate({
     //         where: {
@@ -202,10 +197,6 @@ ${tagHandling.tagListing.join(' ')}`)
     // })
 
 
-
-
-    
-
     // async function findTags(repoTitle, post) {
     //     let tagIndex = 0
     //     const getTagList = await connection.model('tag').findAll({ attributes: ['tagName'] })
@@ -213,7 +204,7 @@ ${tagHandling.tagListing.join(' ')}`)
     //     const tagListToString = tagListToArray.join('\n') || 'Chưa có danh sách tag để chọn.'
     //     const iterator = tagListToArray.keys()
     //     const tagIndexing = []
-        
+
     //     try {
     //         const get_created = await connection.model('database').findOne({ where: { title: repoTitle } })
 
@@ -246,8 +237,8 @@ ${tagHandling.tagListing.join(' ')}`)
     //     function onlyNumbers(element, validationArray) {
     //         return validationArray.includes(element-1)
     //     }
-        // const filter = (collectMessage, collectReaction) => { return collectMessage.content.split(/[^\d]+/).map(Number).every(e => onlyNumbers(e, tagIndexing)) && collectMessage.author.id === message.author.id }
-    //     const collector = message.channel.createMessageCollector(filter, { time: 30000 })   
+    // const filter = (collectMessage, collectReaction) => { return collectMessage.content.split(/[^\d]+/).map(Number).every(e => onlyNumbers(e, tagIndexing)) && collectMessage.author.id === message.author.id }
+    //     const collector = message.channel.createMessageCollector(filter, { time: 30000 })
     //     // On collecting
     //     collector.on('collect', collectingMessages => {
     //         if (collectingMessages.size !== 0) collector.stop()
@@ -270,5 +261,5 @@ ${tagHandling.tagListing.join(' ')}`)
     //         }
     //     })
     // }
-    
+
 }

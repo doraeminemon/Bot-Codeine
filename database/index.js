@@ -1,5 +1,5 @@
-const { Sequelize } = require('sequelize');
-const db = {};
+const { Sequelize } = require('sequelize')
+const db = {}
 
 const connection = new Sequelize('database', 'root', 'password', {
     host: 'localhost',
@@ -8,24 +8,24 @@ const connection = new Sequelize('database', 'root', 'password', {
     storage: 'database/repository.sqlite',
 })
 
-db.connection = connection;
-db.Sequelize = Sequelize;
+db.connection = connection
+db.Sequelize = Sequelize
 
 db.checkConnection = async function() {
     connection.authenticate()
-    .then(() => {console.info("Đã kết nối với Database.")})
-    .catch((error) => {console.error("Lỗi không kết nối được với database:", error)})
+        .then(() => {console.info('Đã kết nối với Database.')})
+        .catch((error) => {console.error('Lỗi không kết nối được với database:', error)})
 }
 
-db.checkConnection();
+db.checkConnection()
 
 const modelDefiners = [
-    require('./models/repo.model'),
-    require('./models/tags.model')
-];
+    require('./models/repo.model.js'),
+    require('./models/tags.model.js'),
+]
 
 for (const modelDefiner of modelDefiners) {
-	modelDefiner(connection);
+    modelDefiner(connection)
 }
 
-module.exports = connection;
+module.exports = connection

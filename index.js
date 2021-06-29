@@ -2,11 +2,8 @@ const Discord = require('discord.js')
 const client = new Discord.Client()
 const guildId = '708367190780543048'
 const mySecret = process.env['TOKEN']
-const SQLite3 = require('sqlite3')
-const Sequelize = require('sequelize')
-const ToCsv = require('sqlite-to-csv')
 
-const connection = require('./database');
+const connection = require('./database')
 
 connection.sync({
     alter: true,
@@ -25,12 +22,39 @@ connection.sync({
     // })
 }).catch(error => console.log(error))
 
-const getApp = (guildId) => {
+const getApp = (currentGuildId) => {
     const app = client.api.applications(client.user.id)
-    if (guildId) {
-        app.guilds(guildId)
+    if (currentGuildId) {
+        app.guilds(currentGuildId)
     }
     return app
+}
+
+const createAPIMessage = async (interaction, content) => {
+    const { data, files } = await Discord.APIMessage.create(
+        client.channels.resolve(interaction.channel_id),
+        content,
+    )
+        .resolveData()
+        .resolveFiles()
+
+    return { ...data, files }
+}
+
+const reply = async (interaction, response) => {
+    let data = {
+        content: response,
+    }
+    // Check for embed
+    if (typeof response === 'object') {
+        data = await createAPIMessage(interaction, response)
+    }
+    client.api.interactions(interaction.id, interaction.token).callback.post({
+        data: {
+            type: 4,
+            data,
+        },
+    })
 }
 
 client.on('ready', async () => {
@@ -60,20 +84,20 @@ client.on('ready', async () => {
                     choices: [
                         {
                             name: 'Tìm',
-                            value: 'Xem chi tiết tin đã lưu.'
+                            value: 'Xem chi tiết tin đã lưu.',
                         },
                         {
                             name: 'Gắn lại thẻ',
-                            value: 'Sửa tag đã lưu trong bài'
+                            value: 'Sửa tag đã lưu trong bài',
                         },
                         {
                             name: 'Xóa',
-                            value: 'Xóa tin này trong repo'
-                        }
-                    ]
-                }
-            ]
-        }
+                            value: 'Xóa tin này trong repo',
+                        },
+                    ],
+                },
+            ],
+        },
     })
 
     client.ws.on('INTERACTION_CREATE', async (interaction) => {
@@ -81,80 +105,35 @@ client.on('ready', async () => {
 
         const command = name.toLowerCase()
 
-        const arguments = {}
-        console.log(options)
-
-        if (options) {
-            for (const option of options) {
-                const { name, value } = option
-                arguments[name] = value
-            }
+        let args = {}
+        if (options && Object.entries(options).length > 0) {
+            args = options.reduce((finalObject, { currentName, value }) => {
+                return { ...finalObject, [currentName]: value }
+            }, {})
         }
-
-        console.log(arguments)
 
         if (command === 'repo') {
             reply(interaction, 'pong')
-        } else if (command === 'embed') {
+            return
+        }
+        else if (command === 'embed') {
             const embed = new Discord.MessageEmbed()
                 .setTitle('Vi du')
 
-            for (const argument in arguments) {
-                const value = arguments[argument]
+            for (const argument in args) {
+                const value = args[argument]
                 embed.addField(argument, value)
             }
             reply(interaction, embed)
+            return
         }
     })
 
-    const reply = async (interaction, response) => {
-        let data = {
-            content: response,
-        }
-        // Check for embed
-        if (typeof response === 'object') {
-            data = await createAPIMessage(interaction, response)
-        }
-        client.api.interactions(interaction.id, interaction.token).callback.post({
-            data: {
-                type: 4,
-                data,
-            }
-        })
-    }
-
-    client.user.setActivity('Netflix', {type: 'WATCHING'})
+    client.user.setActivity('Netflix', { type: 'WATCHING' })
 })
-
-const createAPIMessage = async (interaction, content) => {
-    const { data, files } = await Discord.APIMessage.create(
-        client.channels.resolve(interaction.channel_id),
-        content
-    )
-    .resolveData()
-    .resolveFiles()
-
-    return { ...data, files}
-}
 
 const commandHandler = require('./commands')
 client.on('message', commandHandler)
-
-
-let filePath = './database/repository.sqlite';
-let outputPath = 'csv';
-let logPath  = '.';
-
-let sqliteToCsv = new ToCsv()
-                    .setFilePath(filePath)
-                    .setOutputPath(outputPath)
-                    .setLogPath(logPath);
-
-sqliteToCsv.convert().then( (result) => {
-    //Converted successfully
-}).catch((err) => {
-    //Failed to convert
-});
 
 // keepAlive()
 client.login(mySecret)
