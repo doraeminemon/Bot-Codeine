@@ -55,9 +55,7 @@ const reply = async (interaction, response) => {
     })
 }
 
-client.on('ready', async () => {
-    console.log(`${client.user.tag} đã tham chiến.`)
-
+const registerCommands = async () => {
     const commands = await getApp(guildId).commands.get()
 
     console.log(commands)
@@ -97,6 +95,11 @@ client.on('ready', async () => {
             ],
         },
     })
+}
+
+client.on('ready', async () => {
+    console.log(`${client.user.tag} đã tham chiến.`)
+    await registerCommands()
 
     client.ws.on('INTERACTION_CREATE', async (interaction) => {
         const { name, options } = interaction.data
