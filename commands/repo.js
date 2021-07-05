@@ -1,21 +1,31 @@
 const Discord = require('discord.js')
 
-const storeToDB = async ({ title, content, url, author, authorAvatarURL, attachments }) => ({
-    title,
-    content,
-    url,
-    author,
-    authorAvatarURL,
-    attachments,
-    tags: '',
-})
+const storeToDB = async ({ title, content, url, author, authorAvatarURL, attachments }) => {
+    console.log({
+        title,
+        content,
+        url,
+        author,
+        authorAvatarURL,
+        attachments,
+        tags: '',
+    })
+    return []
+}
 
 const getTagsFromDB = async () => {
+    console.log('getTagsFromDB')
     return []
 }
 
 const updateTag = async () => {
+    console.log('updateTag')
     return {}
+}
+
+const getExistedRepo = async () => {
+    console.log('getExistedRepo')
+    return []
 }
 
 module.exports = {
@@ -78,7 +88,7 @@ module.exports = {
                 }
             })
 
-            collector.on('end', collected => {
+            collector.on('end', async (collected) => {
                 collectMessage.delete()
                 const tagCollected = collected.map(item => item._emoji.name)
 
@@ -88,11 +98,10 @@ module.exports = {
                         tagCollected.splice(index, 1)
                     }
                     const processedInput = tagCollected.map(key => tagMap.get(key)).join(', ')
-                    updateTag(processedInput)
+                    await updateTag(processedInput)
                 }
                 else if (tagCollected.includes('❌')) {
-                    const result = {}
-                    await getExistedRepo(titleNameInput)
+                    const result = await getExistedRepo(titleNameInput)
                     const successMessage = new Discord.MessageEmbed()
                         .setTitle(result.title)
                         .setDescription(result.content)
