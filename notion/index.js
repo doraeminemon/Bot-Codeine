@@ -1,29 +1,19 @@
 const { Client } = require('@notionhq/client')
 
 const NOTION_KEY = process.env.NOTION_KEY
-const NOTION_REPO_DB_ID = process.env.NOTION_REPO_DB_ID
+const database_id = process.env.NOTION_REPO_DB_ID
 
 const notion = new Client({ auth: NOTION_KEY })
 
-async function addItem(text) {
+/**
+ * Link
+ * @param {import('../notion/lib/Link')} link
+ */
+async function addItem(link) {
     try {
-        await notion.request({
-            path: 'pages',
-            method: 'post',
-            body: {
-                parent: { database_id: NOTION_REPO_DB_ID },
-                properties: {
-                    title: {
-                        title: [
-                            {
-                                'text': {
-                                    'content': text,
-                                },
-                            },
-                        ],
-                    },
-                },
-            },
+        await notion.pages.create({
+            parent: { database_id },
+            properties: link.toNotionBlockJSON(),
         })
         console.log('Success, entry added')
     }
@@ -32,6 +22,24 @@ async function addItem(text) {
     }
 }
 
+async function findItem(url) {
+    try {
+        return notion.databases.query({
+            database_id,
+            filter: {
+                property: 'URL',
+                text: {
+                    equals: url,
+                },
+            },
+        })
+    }
+    catch (error) {
+        console.log('error', error.body)
+    }
+}
+
 module.exports = {
     addItem,
+    findItem,
 }

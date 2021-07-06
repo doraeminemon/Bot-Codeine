@@ -1,34 +1,9 @@
 const Discord = require('discord.js')
-
-let storedContent
-
-const storeToDB = async ({ title, content, url, author, authorAvatarURL, attachments }) => {
-    const result = {
-        title,
-        content,
-        url,
-        author,
-        authorAvatarURL,
-        attachments,
-        tags: [],
-    }
-    storedContent = result
-    console.log(result)
-    return [null, result]
-}
+const Link = require('../notion/lib/Link')
+const { addItem, findItem } = require('../notion')
 
 const getTagsFromDB = async () => {
     return ['branding', 'interaction design', 'user experience', 'print', 'illustration', 'art', 'typography']
-}
-
-const updateTag = async (tags) => {
-    storedContent.tags = tags
-    return storedContent
-}
-
-const getExistedRepo = async () => {
-    console.log('getExistedRepo')
-    return storedContent
 }
 
 module.exports = {
@@ -49,15 +24,12 @@ module.exports = {
 
         // Initailize CREATE_REPO
         // check connection
-        const [existedRepo] = await storeToDB({
-            title: titleNameInput,
-            content: post.content,
-            author: post.author.tag,
-            authorAvatarURL: post.author.displayAvatarURL(),
-            url: postURL,
-            attachments: post.attachments.map(a => a.url).join(', '),
-        })
-        if (existedRepo) {
+        const existedRepo = await findItem(postURL)
+        if (!existedRepo) {
+            return message.channel.send('Notion failed')
+        }
+        console.log('[DEBUG] existed repo', existedRepo)
+        if (existedRepo.results.length > 0) {
             return message.channel.send(`Tiêu đề ${existedRepo.title} đã có trong Repo. \`@find ${existedRepo.title}\``)
         }
         // Confirm Created or Existed
@@ -91,27 +63,30 @@ module.exports = {
                 collectMessage.delete()
                 const tagCollected = collected.map(item => item._emoji.name)
 
-                let result = storedContent
                 if (tagCollected.includes('🆗')) {
                     const index = tagCollected.indexOf('🆗')
                     if (index > -1) {
                         tagCollected.splice(index, 1)
                     }
-                    const newTags = tagCollected.map((tag, id) => tags[id])
-                    await updateTag(newTags)
+                    post.tags = tagCollected.map((tag, id) => tags[id])
                 }
-                else if (tagCollected.includes('❌')) {
-                    result = await getExistedRepo(titleNameInput)
-                }
+                const link = new Link({
+                    title: titleNameInput,
+                    content: post.content,
+                    contributor: post.author.tag,
+                    url: postURL,
+                    attachments: post.attachments.map(a => a.url),
+                })
+                await addItem(link)
                 const successMessage = new Discord.MessageEmbed()
-                    .setTitle(result.title)
-                    .setDescription(result.content)
-                    .setURL(result.url)
-                    .setAuthor(result.author, result.authorAvatarURL)
+                    .setTitle(post.title)
+                    .setDescription(post.content)
+                    .setURL(post.url)
+                    .setAuthor(post.author, post.authorAvatarURL)
                     .setThumbnail('https://media3.giphy.com/media/3o7abB06u9bNzA8lu8/giphy.gif?cid=ecf05e47302639138287f826ac42639cf299da19d497d171&rid=giphy.gif&ct=g')
-                    .addField('Thẻ', !result.tags ? 'Chưa gắn tag' : result.tags.join(' ,'), true)
-                    .addField('URL', result.url)
-                    .setImage(!result.attachments ? null : result.attachments)
+                    .addField('Thẻ', !post.tags ? 'Chưa gắn tag' : post.tags.join(' ,'), true)
+                    .addField('URL', post.url)
+                    .setImage(!post.attachments ? null : post.attachments)
                     .setTimestamp()
                     .setFooter(`${message.guild.name}`, message.guild.iconURL())
                 message.channel.send(successMessage)
