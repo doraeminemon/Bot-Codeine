@@ -49,7 +49,7 @@ module.exports = {
 
         // Initailize CREATE_REPO
         // check connection
-        const [existedRepo, createdRepo] = await storeToDB({
+        const [existedRepo] = await storeToDB({
             title: titleNameInput,
             content: post.content,
             author: post.author.tag,
@@ -57,7 +57,7 @@ module.exports = {
             url: postURL,
             attachments: post.attachments.map(a => a.url).join(', '),
         })
-        if (!createdRepo) {
+        if (existedRepo) {
             return message.channel.send(`Tiêu đề ${existedRepo.title} đã có trong Repo. \`@find ${existedRepo.title}\``)
         }
         // Confirm Created or Existed
@@ -97,7 +97,8 @@ module.exports = {
                     if (index > -1) {
                         tagCollected.splice(index, 1)
                     }
-                    await updateTag(tagCollected)
+                    const newTags = tagCollected.map((tag, id) => tags[id])
+                    await updateTag(newTags)
                 }
                 else if (tagCollected.includes('❌')) {
                     result = await getExistedRepo(titleNameInput)
@@ -108,7 +109,7 @@ module.exports = {
                     .setURL(result.url)
                     .setAuthor(result.author, result.authorAvatarURL)
                     .setThumbnail('https://media3.giphy.com/media/3o7abB06u9bNzA8lu8/giphy.gif?cid=ecf05e47302639138287f826ac42639cf299da19d497d171&rid=giphy.gif&ct=g')
-                    .addField('Thẻ', !result.tags ? 'Chưa gắn tag' : result.tags, true)
+                    .addField('Thẻ', !result.tags ? 'Chưa gắn tag' : result.tags.join(' ,'), true)
                     .addField('URL', result.url)
                     .setImage(!result.attachments ? null : result.attachments)
                     .setTimestamp()
