@@ -1,27 +1,4 @@
-const { Guild, TextChannel, Message, MessageEmbed } = require('discord.js')
-
-/**
- * Set a message as reply, return the replied message
- * @param {import('../lib/client')} client
- * @param {Message} originalMessage
- * @param {string} content
- */
-const replyToMessage = async (client, originalMessage, content) => {
-    const response = await client.api.channels[originalMessage.channel.id].messages.post({
-        data: {
-            content,
-            message_reference: {
-                message_id: originalMessage.id,
-                channel_id: originalMessage.channel.id,
-                guild_id: originalMessage.guild.id,
-            },
-        },
-    })
-    const guild = new Guild(client, { id: response.message_reference.guild_id })
-    const currentChannel = new TextChannel(guild, { id: response.message_reference.channel_id })
-    const botMessage = new Message(client, response, currentChannel)
-    return botMessage
-}
+const { MessageEmbed } = require('discord.js')
 
 module.exports = {
     name: 'clap',
@@ -41,7 +18,7 @@ module.exports = {
             return
         }
         const referencedMessage = await message.channel.messages.fetch(message.reference.messageID)
-        const botMessage = await replyToMessage(client, referencedMessage, 'Message worth clap for ?')
+        const botMessage = await client.replyToMessage(client, referencedMessage, 'Message worth clap for ?')
         if (botMessage) {
             botMessage.react('👏')
         }

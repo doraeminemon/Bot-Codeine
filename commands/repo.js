@@ -1,31 +1,34 @@
 const Discord = require('discord.js')
 
+let storedContent
+
 const storeToDB = async ({ title, content, url, author, authorAvatarURL, attachments }) => {
-    console.log({
+    const result = {
         title,
         content,
         url,
         author,
         authorAvatarURL,
         attachments,
-        tags: '',
-    })
-    return []
+        tags: [],
+    }
+    storedContent = result
+    console.log(result)
+    return [null, result]
 }
 
 const getTagsFromDB = async () => {
-    console.log('getTagsFromDB')
-    return []
+    return ['branding', 'interaction design', 'user experience', 'print', 'illustration', 'art', 'typography']
 }
 
-const updateTag = async () => {
-    console.log('updateTag')
-    return {}
+const updateTag = async (tags) => {
+    storedContent.tags = tags
+    return storedContent
 }
 
 const getExistedRepo = async () => {
     console.log('getExistedRepo')
-    return []
+    return storedContent
 }
 
 module.exports = {
@@ -58,31 +61,27 @@ module.exports = {
             return message.channel.send(`Tiêu đề ${existedRepo.title} đã có trong Repo. \`@find ${existedRepo.title}\``)
         }
         // Confirm Created or Existed
-        console.log(message.author.id)
         const emojis = ['1️⃣', '2️⃣', '3️⃣', '4️⃣', '5️⃣', '6️⃣', '7️⃣', '8️⃣', '9️⃣']
         const tags = await getTagsFromDB()
-        const tagMap = tags.map(t => t.tagName).entries().reduce((acc, [, v], index) => {
-            acc[emojis[index]] = v
-            return acc
-        }, new Map())
-        const tagListing = tagMap.entries().map(item => `\`${item.join(' ')}\``)
-        const tagKeys = tagMap.keys()
-
+        const options = emojis.slice(0, tags.length)
+        const optionDisplayed = options.reduce((acc, current, index) => {
+            return acc + `\n${current}: ${tags[index]}`
+        }, '')
 
         // Tag Reaction Collector
         // Call getTag function
         try {
             const collectMessage = await message.channel.send('Đã thêm thành công. React để gắn thẻ!\n' +
                 `'> _${titleNameInput || 'Không lấy được tiêu đề'}_ \n` +
-                `${tagListing.join(' ')}`,
+                `${optionDisplayed}`,
             )
-            await Promise.all(tagKeys.map(key => collectMessage.react(key)))
+            await Promise.all(options.map(key => collectMessage.react(key)))
+            await Promise.all(['🆗', '❌'].map(key => collectMessage.react(key)))
 
             // Message Reaction Collector
             const collector = collectMessage.createReactionCollector((reaction, user) => user.id === message.author.id, { time: 600 * 1000 })
 
-            collector.on('collect', async collected => {
-                await collectMessage.react('🆗') || await collectMessage.react('❌')
+            collector.on('collect', async (collected) => {
                 if (collected.emoji.name === '🆗' || collected.emoji.name === '❌') {
                     collector.stop()
                 }
@@ -92,29 +91,29 @@ module.exports = {
                 collectMessage.delete()
                 const tagCollected = collected.map(item => item._emoji.name)
 
+                let result = storedContent
                 if (tagCollected.includes('🆗')) {
                     const index = tagCollected.indexOf('🆗')
                     if (index > -1) {
                         tagCollected.splice(index, 1)
                     }
-                    const processedInput = tagCollected.map(key => tagMap.get(key)).join(', ')
-                    await updateTag(processedInput)
+                    await updateTag(tagCollected)
                 }
                 else if (tagCollected.includes('❌')) {
-                    const result = await getExistedRepo(titleNameInput)
-                    const successMessage = new Discord.MessageEmbed()
-                        .setTitle(result.title)
-                        .setDescription(result.content)
-                        .setURL(result.url)
-                        .setAuthor(result.author, result.authorAvatarURL)
-                        .setThumbnail('https://media3.giphy.com/media/3o7abB06u9bNzA8lu8/giphy.gif?cid=ecf05e47302639138287f826ac42639cf299da19d497d171&rid=giphy.gif&ct=g')
-                        .addField('Thẻ', !result.tags ? 'Chưa gắn tag' : result.tags, true)
-                        .addField('URL', result.url)
-                        .setImage(!result.attachments ? null : result.attachments)
-                        .setTimestamp()
-                        .setFooter(`${message.guild.name}`, message.guild.iconURL())
-                    message.channel.send(successMessage)
+                    result = await getExistedRepo(titleNameInput)
                 }
+                const successMessage = new Discord.MessageEmbed()
+                    .setTitle(result.title)
+                    .setDescription(result.content)
+                    .setURL(result.url)
+                    .setAuthor(result.author, result.authorAvatarURL)
+                    .setThumbnail('https://media3.giphy.com/media/3o7abB06u9bNzA8lu8/giphy.gif?cid=ecf05e47302639138287f826ac42639cf299da19d497d171&rid=giphy.gif&ct=g')
+                    .addField('Thẻ', !result.tags ? 'Chưa gắn tag' : result.tags, true)
+                    .addField('URL', result.url)
+                    .setImage(!result.attachments ? null : result.attachments)
+                    .setTimestamp()
+                    .setFooter(`${message.guild.name}`, message.guild.iconURL())
+                message.channel.send(successMessage)
             })
         }
         catch (error) {

@@ -33,6 +33,7 @@ client.on('message', async (message) => {
 
     try {
         const context = new DiscordContext(client, message, args)
+        console.log('[DEBUG] context:', context)
         client.commands.get(command).execute(context)
     }
     catch (error) {
