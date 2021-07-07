@@ -6,6 +6,7 @@ class Link {
         url,
         attachments,
         tags,
+        chat_url,
     }) {
         this.title = title
         this.content = content
@@ -13,6 +14,7 @@ class Link {
         this.contributor = contributor
         this.attachments = attachments
         this.tags = tags || []
+        this.chat_url = chat_url
     }
 
     toNotionBlockJSON() {
@@ -27,10 +29,10 @@ class Link {
                 ],
             },
             Content: {
-                'text': [
+                'rich_text': [
                     {
                         'text': {
-                            content: this.content,
+                            'content': this.content,
                         },
                     },
                 ],
@@ -38,7 +40,9 @@ class Link {
             Contributor: {
                 'rich_text': [
                     {
-                        'plain_text': this.contributor,
+                        'text': {
+                            'content': this.contributor,
+                        },
                     },
                 ],
             },
@@ -47,6 +51,9 @@ class Link {
             },
             URL: {
                 url: this.url,
+            },
+            'Chat URL': {
+                url: this.chat_url,
             },
         }
     }

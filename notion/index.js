@@ -27,7 +27,7 @@ async function findItem(url) {
         return notion.databases.query({
             database_id,
             filter: {
-                property: 'URL',
+                property: 'Chat URL',
                 text: {
                     equals: url,
                 },

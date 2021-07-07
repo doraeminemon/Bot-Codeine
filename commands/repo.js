@@ -1,6 +1,7 @@
 const Discord = require('discord.js')
 const Link = require('../notion/lib/Link')
 const { addItem, findItem } = require('../notion')
+const getURLs = require('get-urls')
 
 const getTagsFromDB = async () => {
     return ['branding', 'interaction design', 'user experience', 'print', 'illustration', 'art', 'typography']
@@ -14,7 +15,7 @@ module.exports = {
      */
     async execute({ message, args: argument }) {
         if (argument.length === 0) return message.channel.send('Không được để trống tiêu đề.')
-        if (!message.reference) return
+        if (!message.reference) return message.channel.send('Cần reply vào 1 tin nhắn để lưu vào repo')
 
         const referencedMessage = message.reference
         const post = await message.channel.messages.fetch(referencedMessage.messageID)
@@ -28,7 +29,6 @@ module.exports = {
         if (!existedRepo) {
             return message.channel.send('Notion failed')
         }
-        console.log('[DEBUG] existed repo', existedRepo)
         if (existedRepo.results.length > 0) {
             return message.channel.send(`Tiêu đề ${existedRepo.title} đã có trong Repo. \`@find ${existedRepo.title}\``)
         }
@@ -74,19 +74,25 @@ module.exports = {
                     title: titleNameInput,
                     content: post.content,
                     contributor: post.author.tag,
-                    url: postURL,
+                    chat_url: postURL,
                     attachments: post.attachments.map(a => a.url),
+                    tags: post.tags,
                 })
+                const urlsToBeCaptured = getURLs(message.content)
+                if (urlsToBeCaptured.length > 0) {
+                    link.url = urlsToBeCaptured[0]
+                }
+                console.log('url', urlsToBeCaptured)
                 await addItem(link)
                 const successMessage = new Discord.MessageEmbed()
-                    .setTitle(post.title)
+                    .setTitle(titleNameInput)
                     .setDescription(post.content)
                     .setURL(post.url)
                     .setAuthor(post.author, post.authorAvatarURL)
-                    .setThumbnail('https://media3.giphy.com/media/3o7abB06u9bNzA8lu8/giphy.gif?cid=ecf05e47302639138287f826ac42639cf299da19d497d171&rid=giphy.gif&ct=g')
+                    // .setThumbnail('https://media3.giphy.com/media/3o7abB06u9bNzA8lu8/giphy.gif?cid=ecf05e47302639138287f826ac42639cf299da19d497d171&rid=giphy.gif&ct=g')
                     .addField('Thẻ', !post.tags ? 'Chưa gắn tag' : post.tags.join(' ,'), true)
                     .addField('URL', post.url)
-                    .setImage(!post.attachments ? null : post.attachments)
+                    .setImage(post.attachments && post.attachments.length > 0 ? post.attachments : null)
                     .setTimestamp()
                     .setFooter(`${message.guild.name}`, message.guild.iconURL())
                 message.channel.send(successMessage)
