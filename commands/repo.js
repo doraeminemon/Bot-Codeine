@@ -43,8 +43,7 @@ module.exports = {
         // Tag Reaction Collector
         // Call getTag function
         try {
-            const collectMessage = await message.channel.send('Đã thêm thành công. React để gắn thẻ!\n' +
-                `'> _${titleNameInput || 'Không lấy được tiêu đề'}_ \n` +
+            const collectMessage = await message.channel.send('React để gắn thẻ!\n' +
                 `${optionDisplayed}`,
             )
             await Promise.all(options.map(key => collectMessage.react(key)))
