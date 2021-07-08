@@ -30,7 +30,7 @@ module.exports = {
             return message.channel.send('Notion failed')
         }
         if (existedRepo.results.length > 0) {
-            return message.channel.send(`Tiêu đề ${existedRepo.title} đã có trong Repo. \`@find ${existedRepo.title}\``)
+            return message.channel.send('URL hoặc tin nhắn đã được lưu trong repo')
         }
         // Confirm Created or Existed
         const emojis = ['1️⃣', '2️⃣', '3️⃣', '4️⃣', '5️⃣', '6️⃣', '7️⃣', '8️⃣', '9️⃣']
@@ -78,11 +78,10 @@ module.exports = {
                     attachments: post.attachments.map(a => a.url),
                     tags: post.tags,
                 })
-                const urlsToBeCaptured = getURLs(message.content)
+                const urlsToBeCaptured = Array.from(getURLs(post.content))
                 if (urlsToBeCaptured.length > 0) {
                     link.url = urlsToBeCaptured[0]
                 }
-                console.log('url', urlsToBeCaptured)
                 await addItem(link)
                 const successMessage = new Discord.MessageEmbed()
                     .setTitle(titleNameInput)
