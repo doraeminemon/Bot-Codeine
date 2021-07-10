@@ -35,6 +35,7 @@ async function findItem(url) {
         })
     }
     catch (error) {
+        console.log('err1', error)
         console.log('error', error.body)
     }
 }
