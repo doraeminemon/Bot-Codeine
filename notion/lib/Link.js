@@ -1,3 +1,7 @@
+const cheerio = require('cheerio')
+const { request } = require('express')
+
+const TagMapper = {}
 class Link {
     constructor({
         title,
@@ -16,9 +20,30 @@ class Link {
         this.chat_url = chat_url
         // optional field
         this.url = url
+        // tags
     }
 
-    toNotionBlockJSON() {
+    getTagRelation(tag) {
+        const relationId = TagMapper[tag]
+        if (relationId) {
+            return {
+                id: relationId,
+            }
+        }
+        return undefined
+    }
+
+    async toNotionBlockJSON() {
+        if (this.url) {
+            this.title = await request(this.url, (err, res, body) => {
+                if (err) {
+                    console.log(err)
+                    return
+                }
+                const $ = cheerio.load(body)
+                return $('head > title').text()
+            })
+        }
         const result = {
             Title: {
                 title: [
@@ -38,7 +63,7 @@ class Link {
                     },
                 ],
             },
-            Contributor: {
+            'Discord Contributor': {
                 'rich_text': [
                     {
                         'text': {
@@ -48,16 +73,14 @@ class Link {
                 ],
             },
             Tags: {
-                'multi_select': this.tags.map(tag => ({ name: tag })),
+                'relation': this.tags.map(this.getTagRelation).filter(Boolean),
             },
             'Chat URL': {
                 url: this.chat_url,
             },
-        }
-        if (this.url) {
-            result.URL = {
-                url: this.url,
-            }
+            URL: {
+                url: this.url || this.chat_url,
+            },
         }
         return result
     }
