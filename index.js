@@ -1,9 +1,24 @@
 const fs = require('fs')
+const express = require('express')
 const DiscordContext = require('./lib/context')
 const SanChoiDiscordClient = require('./lib/client')
 
+const port = process.env.PORT || 3000
+const app = express()
 const client = new SanChoiDiscordClient()
 // discord collection is just another extended class of JS Map
+
+app.get('/', (request, response) => {
+    response.send('Hello from Express!')
+})
+
+app.listen(port, (err) => {
+    if (err) {
+        return console.log('something bad happened', err)
+    }
+
+    console.log(`server is listening on ${port}`)
+})
 
 // loading all commands and set to the propperty
 fs.readdirSync('./commands')
@@ -14,7 +29,7 @@ fs.readdirSync('./commands')
     })
 
 const config = {
-    prefix: '/',
+    prefix: '-',
 }
 
 client.on('ready', async () => {
