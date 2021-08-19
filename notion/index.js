@@ -11,11 +11,11 @@ const notion = new Client({ auth: NOTION_KEY })
  */
 async function addItem(link) {
     try {
-        await notion.pages.create({
+        const resp = await notion.pages.create({
             parent: { database_id },
-            properties: link.toNotionBlockJSON(),
+            properties: await link.toNotionBlockJSON(),
         })
-        console.log('Success, entry added')
+        console.log('Success, entry added', resp)
     }
     catch (error) {
         console.log('error', error.body)

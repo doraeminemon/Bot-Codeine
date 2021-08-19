@@ -1,5 +1,5 @@
-const cheerio = require('cheerio')
-const { request } = require('express')
+const axios = require('axios').default
+const { parse } = require('node-html-parser')
 
 const TagMapper = {}
 class Link {
@@ -18,9 +18,7 @@ class Link {
         this.attachments = attachments
         this.tags = tags || []
         this.chat_url = chat_url
-        // optional field
         this.url = url
-        // tags
     }
 
     getTagRelation(tag) {
@@ -35,39 +33,49 @@ class Link {
 
     async toNotionBlockJSON() {
         if (this.url) {
-            this.title = await request(this.url, (err, res, body) => {
-                if (err) {
-                    console.log(err)
-                    return
-                }
-                const $ = cheerio.load(body)
-                return $('head > title').text()
-            })
+            try {
+                const response = await axios.get(this.url)
+                const html = parse(response.data)
+                this.title = html.querySelector('head > title').text
+                console.log('title', this.title)
+            }
+            catch (error) {
+                console.log('err', error)
+            }
         }
         const result = {
-            Title: {
+            'Title Thân Thiện': {
                 title: [
                     {
-                        'text': {
-                            'content': this.title,
+                        text: {
+                            content: this.title,
                         },
                     },
                 ],
             },
-            Content: {
-                'rich_text': [
+            'Title Gốc': {
+                rich_text: [
                     {
-                        'text': {
-                            'content': this.content,
+                        text: {
+                            content:  this.title,
+                        },
+                    },
+                ],
+            },
+            'Comment - Review': {
+                rich_text: [
+                    {
+                        text: {
+                            content: this.content,
                         },
                     },
                 ],
             },
             'Discord Contributor': {
-                'rich_text': [
+                rich_text: [
                     {
-                        'text': {
-                            'content': this.contributor,
+                        text: {
+                            content: this.contributor,
                         },
                     },
                 ],
@@ -78,7 +86,7 @@ class Link {
             'Chat URL': {
                 url: this.chat_url,
             },
-            URL: {
+            Link: {
                 url: this.url || this.chat_url,
             },
         }
