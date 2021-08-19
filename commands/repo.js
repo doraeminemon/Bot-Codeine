@@ -3,52 +3,6 @@ const Link = require('../notion/lib/Link')
 const Notion = require('../notion')
 const getURLs = require('get-urls')
 
-/**
- * Getting tags from interaction
- * @param {import('discord.js').Message} message
- */
-const getInteractiveTags = async (message) => {
-    const emojis = ['1️⃣', '2️⃣', '3️⃣', '4️⃣', '5️⃣', '6️⃣', '7️⃣', '8️⃣', '9️⃣']
-    const tags = await Notion.getTags()
-    const options = emojis.slice(0, tags.length)
-    const optionDisplayed = options.reduce((acc, current, index) => {
-        return acc + `\n${current}: ${tags[index]}`
-    }, '')
-
-    // Tag Reaction Collector
-    // Call getTag function
-    const collectMessage = await message.channel.send('React để gắn thẻ!\n' +
-        `${optionDisplayed}`,
-    )
-    await Promise.all(options.map(key => collectMessage.react(key)))
-    await Promise.all(['🆗', '❌'].map(key => collectMessage.react(key)))
-
-    // Message Reaction Collector
-    return new Promise((resolve) => {
-        const collector = collectMessage.createReactionCollector((reaction, user) => user.id === message.author.id, { time: 600 * 1000 })
-
-        collector.on('collect', async (collected) => {
-            if (collected.emoji.name === '🆗' || collected.emoji.name === '❌') {
-                collector.stop()
-            }
-        })
-
-        collector.on('end', async (collected) => {
-            collectMessage.delete()
-            const tagCollected = collected.map(item => item._emoji.name)
-
-            if (tagCollected.includes('🆗')) {
-                const index = tagCollected.indexOf('🆗')
-                if (index > -1) {
-                    tagCollected.splice(index, 1)
-                }
-                resolve(tagCollected.map((tag, id) => tags[id]))
-            }
-            resolve([])
-        })
-    })
-}
-
 module.exports = {
     name: 'repo',
     description: 'Categorize and storing the precious link into a tag based db on Notion',
@@ -56,17 +10,25 @@ module.exports = {
      * @param {import('../lib/context')} context
      */
     async execute({ message, args }) {
-        if (args.length === 0) return message.channel.send('Không được để trống tiêu đề.')
-        if (!message.reference) return message.channel.send('Cần reply vào 1 tin nhắn để lưu vào repo')
+        const howToUseMessage = 'Để sử dụng, hãy reply vào tin nhắn bạn muốn lưu trong repo với cú pháp `-repo <Tiêu đề> #<tag> #<tag2> #<tag3> ... `.Với những tag nhiều từ, hãy sử dụng `-` hoặc `_` để phân biệt, ví dụ `#art-history.`'
+        if (args.length === 0) return message.channel.send(howToUseMessage)
+        if (!message.reference) return message.channel.send(howToUseMessage)
 
         const referencedMessage = message.reference
         const post = await message.channel.messages.fetch(referencedMessage.messageID)
         const postURL = `https://discord.com/channels/${referencedMessage.guildID}/${referencedMessage.channelID}/${referencedMessage.messageID}`
 
         const titleNameInput = args.filter(arg => !arg.startsWith('#')).join(' ').trim()
+        const tags = await Notion.getTags()
         const inlineTags = args
             .filter(arg => arg.startsWith('#'))
             .map(arg => arg.replace('#', '').replace(/[-_]+/, ' ').toLowerCase())
+        const matchedTags = tags.filter(tag => inlineTags.includes(tag.name))
+
+        if (matchedTags.length === 0) {
+            return message.channel.send('Không tìm thấy tag nào phù hợp với repo. Hãy gõ `-tags` để xem những tags đã có và tìm tag phù hợp')
+        }
+        post.tags = matchedTags
 
         const existedRepo = await Notion.findItemByChatURL(postURL)
         if (!existedRepo) {
@@ -74,14 +36,6 @@ module.exports = {
         }
         if (existedRepo.results.length > 0) {
             return message.channel.send('URL hoặc tin nhắn đã được lưu trong repo')
-        }
-        if (inlineTags.length === 0) {
-            post.tags = await getInteractiveTags(message)
-        }
-        else {
-            const tags = await Notion.getTags()
-            const matchedTags = tags.filter(tag => inlineTags.includes(tag.name))
-            post.tags = matchedTags
         }
         if (post.tags.length === 0) {
             return message.channel.send('No tags found, no repo added')
