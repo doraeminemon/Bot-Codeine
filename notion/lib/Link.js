@@ -1,7 +1,6 @@
 const axios = require('axios').default
 const { parse } = require('node-html-parser')
 
-const TagMapper = {}
 class Link {
     constructor({
         title,
@@ -21,23 +20,12 @@ class Link {
         this.url = url
     }
 
-    getTagRelation(tag) {
-        const relationId = TagMapper[tag]
-        if (relationId) {
-            return {
-                id: relationId,
-            }
-        }
-        return undefined
-    }
-
     async toNotionBlockJSON() {
         if (this.url) {
             try {
                 const response = await axios.get(this.url)
                 const html = parse(response.data)
-                this.title = html.querySelector('head > title').text
-                console.log('title', this.title)
+                this.originalTitle = html.querySelector('head > title').text
             }
             catch (error) {
                 console.log('err', error)
@@ -57,7 +45,7 @@ class Link {
                 rich_text: [
                     {
                         text: {
-                            content:  this.title,
+                            content: this.originalTitle,
                         },
                     },
                 ],
@@ -81,7 +69,7 @@ class Link {
                 ],
             },
             Tags: {
-                'relation': this.tags.map(this.getTagRelation).filter(Boolean),
+                'relation': this.tags.map(tag => ({ id: tag.id })),
             },
             'Chat URL': {
                 url: this.chat_url,

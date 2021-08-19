@@ -3,17 +3,13 @@ const Link = require('../notion/lib/Link')
 const Notion = require('../notion')
 const getURLs = require('get-urls')
 
-const getTagsFromDB = async () => {
-    return ['branding', 'interaction design', 'user experience', 'print', 'illustration', 'art', 'typography']
-}
-
 /**
  * Getting tags from interaction
  * @param {import('discord.js').Message} message
  */
 const getInteractiveTags = async (message) => {
     const emojis = ['1️⃣', '2️⃣', '3️⃣', '4️⃣', '5️⃣', '6️⃣', '7️⃣', '8️⃣', '9️⃣']
-    const tags = await getTagsFromDB()
+    const tags = await Notion.getTags()
     const options = emojis.slice(0, tags.length)
     const optionDisplayed = options.reduce((acc, current, index) => {
         return acc + `\n${current}: ${tags[index]}`
@@ -68,9 +64,11 @@ module.exports = {
         const postURL = `https://discord.com/channels/${referencedMessage.guildID}/${referencedMessage.channelID}/${referencedMessage.messageID}`
 
         const titleNameInput = args.filter(arg => !arg.startsWith('#')).join(' ').trim()
-        const inlineTags = args.filter(arg => arg.startsWith('#')).map(arg => arg.replace('#', ''))
+        const inlineTags = args
+            .filter(arg => arg.startsWith('#'))
+            .map(arg => arg.replace('#', '').replace(/[-_]+/, ' ').toLowerCase())
 
-        const existedRepo = await Notion.findItem(postURL)
+        const existedRepo = await Notion.findItemByChatURL(postURL)
         if (!existedRepo) {
             return message.channel.send('Kết quả từ Notion không được trả về')
         }
@@ -81,7 +79,9 @@ module.exports = {
             post.tags = await getInteractiveTags(message)
         }
         else {
-            post.tags = inlineTags
+            const tags = await Notion.getTags()
+            const matchedTags = tags.filter(tag => inlineTags.includes(tag.name))
+            post.tags = matchedTags
         }
         if (post.tags.length === 0) {
             return message.channel.send('No tags found, no repo added')
@@ -98,15 +98,16 @@ module.exports = {
         if (urlsToBeCaptured.length > 0) {
             link.url = urlsToBeCaptured[0]
         }
-        await Notion.addItem(link)
+        const notionResponse = await Notion.addItem(link)
         const successMessage = new Discord.MessageEmbed()
             .setTitle(titleNameInput)
             .setDescription(post.content)
             .setURL(post.url)
             .setAuthor(post.author, post.authorAvatarURL)
             // .setThumbnail('https://media3.giphy.com/media/3o7abB06u9bNzA8lu8/giphy.gif?cid=ecf05e47302639138287f826ac42639cf299da19d497d171&rid=giphy.gif&ct=g')
-            .addField('Thẻ', !post.tags ? 'Chưa gắn tag' : post.tags.join(' ,'), true)
+            .addField('Thẻ', !post.tags ? 'Chưa gắn tag' : post.tags.map(tag => tag.originalName).join(', '), true)
             .addField('URL', post.url)
+            .addField('Preview', notionResponse.url)
             .setImage(post.attachments && post.attachments.length > 0 ? post.attachments : null)
             .setTimestamp()
             .setFooter(`${message.guild.name}`, message.guild.iconURL())
