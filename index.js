@@ -30,6 +30,7 @@ fs.readdirSync('./commands')
 
 const config = {
     prefix: '-',
+    permissiveRoles: 'Thủ Thư',
 }
 
 client.on('ready', async () => {
@@ -40,6 +41,7 @@ client.on('ready', async () => {
 client.on('message', async (message) => {
     // command catcher
     if (!message.content.startsWith(config.prefix) || message.author.bot) return
+    if (!message.member.roles.cache.some(role => role.name === config.permissiveRoles)) return
 
     const args = message.content.slice(config.prefix.length).trim().split(/ +/)
     const command = args.shift().toLowerCase()
