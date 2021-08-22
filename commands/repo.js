@@ -66,5 +66,6 @@ module.exports = {
             .setTimestamp()
             .setFooter(`${message.guild.name}`, message.guild.iconURL())
         message.channel.send(successMessage)
+        message.delete()
     },
 }
