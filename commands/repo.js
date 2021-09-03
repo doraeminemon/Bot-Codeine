@@ -1,7 +1,7 @@
 const Discord = require('discord.js')
 const Link = require('../notion/lib/Link')
 const Notion = require('../notion')
-const getURLs = require('get-urls')
+const { URL } = require('url')
 
 module.exports = {
     name: 'repo',
@@ -48,7 +48,17 @@ module.exports = {
             attachments: post.attachments.map(a => a.url),
             tags: post.tags,
         })
-        const urlsToBeCaptured = Array.from(getURLs(post.content))
+        const urlsToBeCaptured = post.content.split(' ')
+            .map(str => {
+                try {
+                    new URL(str)
+                    return str
+                }
+                catch {
+                    return false
+                }
+            })
+            .filter(url => url)
         if (urlsToBeCaptured.length > 0) {
             link.url = urlsToBeCaptured[0]
         }
