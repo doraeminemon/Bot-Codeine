@@ -88,4 +88,12 @@ module.exports = {
         message.channel.send(successMessage)
         message.delete()
     },
+    /**
+     * @param {import('discord.js').ContextMenuInteraction} interaction
+     */
+    async interact(interaction) {
+        const targetMessage = await interaction.channel.messages.fetch(interaction.targetId)
+        interaction.reply(targetMessage.content)
+        console.log('lastMessage', targetMessage)
+    },
 }
