@@ -10,11 +10,11 @@ module.exports = {
      * @param {import('@discordjs/builders').SlashCommandBuilder} commandBuilder
      */
     options(commandBuilder) {
-        commandBuilder.addStringOption(opt => opt.setName('Tiêu đề').setDescription('Tiêu đề của bài được lưu').setRequired(true))
-        commandBuilder.addStringOption(opt => opt.setName('Hashtag 1').setDescription('Hashtag').setRequired(true))
-        commandBuilder.addStringOption(opt => opt.setName('Hashtag 2').setDescription('Hashtag').setRequired(false))
-        commandBuilder.addStringOption(opt => opt.setName('Hashtag 3').setDescription('Hashtag').setRequired(false))
-        commandBuilder.addStringOption(opt => opt.setName('Hashtag 4').setDescription('Hashtag').setRequired(false))
+        commandBuilder.addStringOption(opt => opt.setName('title').setDescription('Tiêu đề của bài được lưu').setRequired(true))
+        commandBuilder.addStringOption(opt => opt.setName('hashtag-1').setDescription('Hashtag').setRequired(true))
+        commandBuilder.addStringOption(opt => opt.setName('hashtag-2').setDescription('Hashtag').setRequired(false))
+        commandBuilder.addStringOption(opt => opt.setName('hashtag-3').setDescription('Hashtag').setRequired(false))
+        commandBuilder.addStringOption(opt => opt.setName('hashtag-4').setDescription('Hashtag').setRequired(false))
     },
     /**
      * @param {import('../lib/context')} context

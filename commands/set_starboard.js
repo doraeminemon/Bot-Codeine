@@ -1,6 +1,6 @@
 module.exports = {
     name: 'set_starboard',
-    description: '',
+    description: 'set starboard',
     /**
      * @param {import('../lib/context')} context
      */

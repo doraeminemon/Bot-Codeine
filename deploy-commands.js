@@ -20,17 +20,12 @@ const rest = new REST({ version: '9' }).setToken(process.env.DISCORD_BOT_TOKEN)
 const clientId = process.env.DISCORD_CLIENT_ID
 const guildId = process.env.DISCORD_GUILD_ID
 
-// eslint-disable-next-line no-unexpected-multiline
-(async () => {
-    try {
-        await rest.put(
-            Routes.applicationGuildCommands(clientId, guildId),
-            { body: commands },
-        )
-
-        console.log('Successfully registered application commands.')
-    }
-    catch (error) {
-        console.error(error)
-    }
-})()
+try {
+    rest.put(
+        Routes.applicationGuildCommands(clientId, guildId),
+        { body: commands },
+    ).then(() => console.log('Successfully registered application commands.'))
+}
+catch (error) {
+    console.error(error)
+}
