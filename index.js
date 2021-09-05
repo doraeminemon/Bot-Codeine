@@ -59,4 +59,19 @@ client.on('message', async (message) => {
     }
 })
 
+client.on('interactionCreate', async (interaction) => {
+    if (interaction.isCommand()) {
+        if (!client.commands.has(interaction.commandName)) return
+        const command = client.commands.get(interaction.commandName)
+        if (!command.interact) return
+        command.interact(client, interaction)
+    }
+
+    if (interaction.isContextMenu()) {
+        const command = client.commands.get(interaction.commandName)
+        if (!command.interact) return
+        command.interact(client, interaction)
+    }
+})
+
 client.login(process.env.DISCORD_BOT_TOKEN)
